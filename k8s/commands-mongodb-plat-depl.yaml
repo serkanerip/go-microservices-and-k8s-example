@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: commands-mongodb-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: commands-mongo
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: commands-mongo
+    spec:
+      containers:
+      - image: mongo
+        name: mongo
+        args: ["--dbpath","/data/db"]
+        env:
+        - name: MONGO_INITDB_ROOT_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: mongo-creds
+              key: username
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mongo-creds
+              key: password
+        volumeMounts:
+        - name: "mongo-data-dir"
+          mountPath: "/data/db"
+      volumes:
+      - name: "mongo-data-dir"
+        persistentVolumeClaim:
+          claimName:  "commands-mongo-claim"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: commands-mongodb-clusterip-srv
+spec:
+  type: ClusterIP
+  selector:
+    app: commands-mongo
+  ports:
+    - name: commands-mongo
+      protocol: TCP
+      port: 27017
+      targetPort: 27017
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: commands-mongodb-nodeport
+spec:
+  type: NodePort
+  selector:
+    app: commands-mongo
+  ports:
+    - protocol: TCP
+      port: 27017
+      targetPort: 27017

@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: commands-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: commandservice
+  template:
+    metadata:
+      labels:
+        app: commandservice
+    spec:
+      containers:
+        - name: commandservice
+          image: serkanerip/commands-service
+          env:
+            - name: PORT
+              value: "80"
+            - name: MONGODB_CONNECTION_STRING
+              value: "mongodb://adminuser:password123@commands-mongodb-clusterip-srv:27017/"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: commands-clusterip-srv
+spec:
+  type: ClusterIP
+  selector:
+    app: commandservice
+  ports:
+    - name: commands-clusterip-srv
+      protocol: TCP
+      port: 80
+      targetPort: 80

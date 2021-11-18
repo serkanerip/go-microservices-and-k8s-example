@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: platforms-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: platformservice
+  template:
+    metadata:
+      labels:
+        app: platformservice
+    spec:
+      containers:
+        - name: platformservice
+          image: serkanerip/platform-service
+          env:
+            - name: PORT
+              value: "80"
+            - name: COMMAND_SERVICE
+              value: "http://commands-clusterip-srv:80"
+            - name: MONGODB_CONNECTION_STRING
+              value: "mongodb://adminuser:password123@mongodb-clusterip-srv:27017/"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: platforms-clusterip-srv
+spec:
+  type: ClusterIP
+  selector:
+    app: platformservice
+  ports:
+    - name: platforms-clusterip-srv
+      protocol: TCP
+      port: 80
+      targetPort: 80
+
